@@ -107,7 +107,7 @@ void USART2_IRQHandler(void)
     if((sr & USART_SR_PE) != 0U) {
       g_uartParityErrorCount++;
     }
-    /* On STM32F4 this macro clears PE/FE/NE/ORE by SR+DR read sequence. */
+    /* On STM32F4 this PE-clear macro also clears FE/NE/ORE via SR+DR read sequence. */
     __HAL_UART_CLEAR_PEFLAG(&huart2);
     return;
   }
@@ -150,7 +150,7 @@ void TIM7_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM7_IRQn 0 */
 	if(__HAL_TIM_GET_FLAG(&htim7, TIM_FLAG_UPDATE) != RESET &&
-     __HAL_TIM_GET_IT_SOURCE(&htim7, TIM_IT_UPDATE) !=RESET) {
+     __HAL_TIM_GET_IT_SOURCE(&htim7, TIM_IT_UPDATE) != RESET) {
     __HAL_TIM_CLEAR_IT(&htim7, TIM_IT_UPDATE);
     if (downcounter > 0U) {
       downcounter--;

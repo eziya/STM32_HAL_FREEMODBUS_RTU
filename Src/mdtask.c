@@ -67,7 +67,7 @@ void ModbusRTUStackPoll(void)
 #if APP_USE_FREERTOS
 void ModbusRTUTask(void const * argument)
 { 
-  (void)argument;
+  UNUSED(argument);
   if(!ModbusRTUStackInit())
   {
     HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_SET);
