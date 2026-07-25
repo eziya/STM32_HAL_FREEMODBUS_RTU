@@ -136,7 +136,6 @@ void TIM7_IRQHandler(void)
         pxMBPortCBTimerExpired();
       }
     }
-    return;
   }
 
   /* USER CODE END TIM7_IRQn 0 */

@@ -20,11 +20,13 @@
  */
 
 /* ----------------------- Modbus includes ----------------------------------*/
+/* port.h provides IRQ critical-section macros used by this queue. */
 #include "port.h"
 #include "mb.h"
 #include "mbport.h"
 
 /* ----------------------- Variables ----------------------------------------*/
+/* Small bounded queue to avoid single-event overwrite under ISR bursts. */
 #define MB_EVENT_QUEUE_SIZE 8
 
 static volatile UCHAR ucQueueHead;

@@ -67,7 +67,8 @@ BOOL
 xMBPortSerialPutByte( CHAR ucByte )
 {
   /* Put a byte in the UART transmit register without blocking.
-  * This function is called from the TXE interrupt path. */
+  * This function is called from the TXE interrupt path, so HAL_UART_Transmit
+  * must not be used here because it can block. */
   huart2.Instance->DR = (uint8_t)ucByte;
   return TRUE;
 }
