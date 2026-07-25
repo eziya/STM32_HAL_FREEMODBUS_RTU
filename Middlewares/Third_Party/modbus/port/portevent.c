@@ -29,8 +29,8 @@
 /* Small bounded queue (8 events) to absorb short ISR bursts with low RAM cost. */
 #define MB_EVENT_QUEUE_SIZE 8
 
-static volatile UCHAR ucQueueHead;
-static volatile UCHAR ucQueueTail;
+static UCHAR ucQueueHead;
+static UCHAR ucQueueTail;
 static eMBEventType xQueuedEvents[MB_EVENT_QUEUE_SIZE];
 
 /* ----------------------- Start implementation -----------------------------*/

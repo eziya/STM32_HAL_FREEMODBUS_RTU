@@ -94,8 +94,8 @@ void USART2_IRQHandler(void)
   }
 
   if((__HAL_UART_GET_FLAG(&huart2, UART_FLAG_ORE) != RESET) ||
-     (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_NE) != RESET) ||
-     (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_FE) != RESET) ||
+     (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_NE) != RESET)  ||
+     (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_FE) != RESET)  ||
      (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_PE) != RESET)) {
     HAL_UART_IRQHandler(&huart2);
     return;
