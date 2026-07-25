@@ -49,11 +49,7 @@ xMBPortEventPost( eMBEventType eEvent )
     UCHAR ucNextHead;
 
     ENTER_CRITICAL_SECTION(  );
-    ucNextHead = ucQueueHead + 1;
-    if( ucNextHead >= MB_EVENT_QUEUE_SIZE )
-    {
-        ucNextHead = 0;
-    }
+    ucNextHead = ( UCHAR )( ( ucQueueHead + 1 ) % MB_EVENT_QUEUE_SIZE );
 
     if( ucNextHead != ucQueueTail )
     {
@@ -75,11 +71,7 @@ xMBPortEventGet( eMBEventType * eEvent )
     if( ucQueueHead != ucQueueTail )
     {
         *eEvent = xQueuedEvents[ucQueueTail];
-        ucQueueTail++;
-        if( ucQueueTail >= MB_EVENT_QUEUE_SIZE )
-        {
-            ucQueueTail = 0;
-        }
+        ucQueueTail = ( UCHAR )( ( ucQueueTail + 1 ) % MB_EVENT_QUEUE_SIZE );
         xEventHappened = TRUE;
     }
     EXIT_CRITICAL_SECTION(  );
