@@ -31,7 +31,7 @@
  
 /* -----------------------    variables     ---------------------------------*/
 extern TIM_HandleTypeDef htim7;
-volatile uint16_t timeout = 0;
+uint16_t timeout = 0;
 volatile uint16_t downcounter = 0;
  
 /* ----------------------- Start implementation -----------------------------*/

@@ -59,7 +59,7 @@ xMBPortEventPost( eMBEventType eEvent )
         ucQueueHead = ucNextHead;
         xStatus = TRUE;
     }
-    /* ucNextHead == ucQueueTail means queue is full; drop newest event. */
+    /* ucNextHead == ucQueueTail means queue is full; reject incoming event. */
     EXIT_CRITICAL_SECTION(  );
 
     return xStatus;
