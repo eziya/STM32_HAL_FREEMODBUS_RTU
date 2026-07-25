@@ -32,7 +32,7 @@
 static UCHAR ucQueueHead;
 static UCHAR ucQueueTail;
 static eMBEventType xQueuedEvents[MB_EVENT_QUEUE_SIZE];
-volatile ULONG ulMBPortEventDropCount = 0;
+volatile ULONG g_mbPortEventDropCount = 0;
 
 /* ----------------------- Start implementation -----------------------------*/
 BOOL
@@ -63,7 +63,7 @@ xMBPortEventPost( eMBEventType eEvent )
     /* ucNextHead == ucQueueTail means queue is full; reject incoming event. */
     else
     {
-        ulMBPortEventDropCount++;
+        g_mbPortEventDropCount++;
     }
     EXIT_CRITICAL_SECTION(  );
 

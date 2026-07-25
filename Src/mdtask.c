@@ -13,10 +13,10 @@
 static USHORT usRegInputStart = REG_INPUT_START;
 static USHORT usRegInputBuf[REG_INPUT_NREGS];
 
-volatile uint32_t ulMBInitErrorCount = 0;
-volatile uint32_t ulMBEnableErrorCount = 0;
-volatile uint32_t ulMBPollErrorCount = 0;
-volatile uint32_t ulMBRegNoregErrorCount = 0;
+volatile uint32_t g_mbInitErrorCount = 0;
+volatile uint32_t g_mbEnableErrorCount = 0;
+volatile uint32_t g_mbPollErrorCount = 0;
+volatile uint32_t g_mbRegNoregErrorCount = 0;
 
 uint8_t ModbusRTUStackInit(void)
 {
@@ -34,14 +34,14 @@ uint8_t ModbusRTUStackInit(void)
   eStatus = eMBInit( MB_RTU, 1, 3, 19200, MB_PAR_NONE );
   if( eStatus != MB_ENOERR )
   {
-    ulMBInitErrorCount++;
+    g_mbInitErrorCount++;
     return 0;
   }
 
   eStatus = eMBEnable();
   if( eStatus != MB_ENOERR )
   {
-    ulMBEnableErrorCount++;
+    g_mbEnableErrorCount++;
     return 0;
   }
 
@@ -53,7 +53,7 @@ void ModbusRTUStackPoll(void)
   eMBErrorCode eStatus = eMBPoll();
   if( eStatus != MB_ENOERR )
   {
-    ulMBPollErrorCount++;
+    g_mbPollErrorCount++;
   }
 }
 
@@ -101,7 +101,7 @@ eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
     else
     {
 			  HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
-        ulMBRegNoregErrorCount++;
+        g_mbRegNoregErrorCount++;
         eStatus = MB_ENOREG;			
     }
 
@@ -116,7 +116,7 @@ eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs,
     (void)usAddress;
     (void)usNRegs;
     (void)eMode;
-    ulMBRegNoregErrorCount++;
+    g_mbRegNoregErrorCount++;
     return MB_ENOREG;
 }
 
@@ -129,7 +129,7 @@ eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils,
     (void)usAddress;
     (void)usNCoils;
     (void)eMode;
-    ulMBRegNoregErrorCount++;
+    g_mbRegNoregErrorCount++;
     return MB_ENOREG;
 }
 
@@ -139,6 +139,6 @@ eMBRegDiscreteCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNDiscrete )
     (void)pucRegBuffer;
     (void)usAddress;
     (void)usNDiscrete;
-    ulMBRegNoregErrorCount++;
+    g_mbRegNoregErrorCount++;
     return MB_ENOREG;
 }

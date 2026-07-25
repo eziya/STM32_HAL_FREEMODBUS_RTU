@@ -43,10 +43,10 @@
 #include "mb.h"
 #include "mbport.h"
 extern volatile uint16_t downcounter;
-volatile uint32_t ulUartOverrunErrorCount = 0;
-volatile uint32_t ulUartNoiseErrorCount = 0;
-volatile uint32_t ulUartFrameErrorCount = 0;
-volatile uint32_t ulUartParityErrorCount = 0;
+volatile uint32_t g_uartOverrunErrorCount = 0;
+volatile uint32_t g_uartNoiseErrorCount = 0;
+volatile uint32_t g_uartFrameErrorCount = 0;
+volatile uint32_t g_uartParityErrorCount = 0;
 
 /* USER CODE END 0 */
 
@@ -98,19 +98,18 @@ void USART2_IRQHandler(void)
   if((((sr & (USART_SR_ORE | USART_SR_NE | USART_SR_FE)) != 0U) && ((cr3 & USART_CR3_EIE) != 0U)) ||
      (((sr & USART_SR_PE) != 0U) && ((cr1 & USART_CR1_PEIE) != 0U))) {
     if((sr & USART_SR_ORE) != 0U) {
-      ulUartOverrunErrorCount++;
+      g_uartOverrunErrorCount++;
     }
     if((sr & USART_SR_NE) != 0U) {
-      ulUartNoiseErrorCount++;
+      g_uartNoiseErrorCount++;
     }
     if((sr & USART_SR_FE) != 0U) {
-      ulUartFrameErrorCount++;
+      g_uartFrameErrorCount++;
     }
     if((sr & USART_SR_PE) != 0U) {
-      ulUartParityErrorCount++;
+      g_uartParityErrorCount++;
     }
     __HAL_UART_CLEAR_PEFLAG(&huart2);
-    HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
     return;
   }
   

@@ -92,7 +92,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   
   /* Compute TIM6 clock */
   uwAPB1Prescaler = clkconfig.APB1CLKDivider;
-  if(uwAPB1Prescaler == RCC_HCLK_DIV1)
+  if (uwAPB1Prescaler == RCC_HCLK_DIV1)
   {
     uwTimclock = HAL_RCC_GetPCLK1Freq();
   }
