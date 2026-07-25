@@ -97,7 +97,15 @@ void USART2_IRQHandler(void)
      (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_NE) != RESET)  ||
      (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_FE) != RESET)  ||
      (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_PE) != RESET)) {
-    HAL_UART_IRQHandler(&huart2);
+         
+    /* 
+     * [BUG FIX] 무한 인터럽트 루프(Lock) 방지
+     * HAL_UART_IRQHandler(&huart2)는 수신이 진행중이 아니면 에러를 클리어하지 못하고 리턴합니다.
+     * 따라서 SR(Status Register) 읽기 후 DR(Data Register) 읽기 조합으로 에러 플래그를 강제 소거합니다.
+     */
+    volatile uint32_t tmpreg = huart2.Instance->SR;
+    tmpreg = huart2.Instance->DR;
+    (void)tmpreg; // unused 경고 억제
     return;
   }
 
@@ -139,7 +147,7 @@ void TIM7_IRQHandler(void)
   }
 
   /* USER CODE END TIM7_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim7);
+  // HAL_TIM_IRQHandler(&htim7); // [OPTIMIZATION] 이미 위에서 처리 및 클리어했으므로 중복 호출 제거
   /* USER CODE BEGIN TIM7_IRQn 1 */
 
   /* USER CODE END TIM7_IRQn 1 */

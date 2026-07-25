@@ -41,9 +41,14 @@ xMBPortTimersInit( USHORT usTim1Timerout50us )
   TIM_MasterConfigTypeDef sMasterConfig;
   
   htim7.Instance = TIM7;
-  htim7.Init.Prescaler = (HAL_RCC_GetPCLK1Freq() / 1000000) - 1;
+  /* 
+   * [BUG FIX] STM32F4 클럭 트리에서 APB1 분주비가 1이 아닐 경우(DIV4), 
+   * 타이머 클럭은 PCLK1의 2배(x2)로 동작합니다.
+   * 따라서 정확히 1MHz 카운터(1us 단위)를 만들기 위해 *2 를 곱해주어야 합니다.
+   */
+  htim7.Init.Prescaler = ((HAL_RCC_GetPCLK1Freq() * 2) / 1000000) - 1;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim7.Init.Period = 50 - 1;
+  htim7.Init.Period = 50 - 1; // 50us 마다 인터럽트 발생
   
   timeout = usTim1Timerout50us;
   

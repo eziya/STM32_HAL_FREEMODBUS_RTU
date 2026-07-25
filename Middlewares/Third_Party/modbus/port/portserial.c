@@ -57,9 +57,37 @@ BOOL
 xMBPortSerialInit( UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity )
 {
   /* 
-  Do nothing, Initialization is handled by MX_USART3_UART_Init() 
-  Fixed port, baudrate, databit and parity  
-  */
+   * [BUG FIX] 매개변수로 넘어온 Baudrate와 Parity를 무시하지 않고 실제 하드웨어에 적용합니다.
+   * 이렇게 해야 eMBInit() 호출 시 원하는 보레이트로 정상 변경됩니다.
+   */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = ulBaudRate;
+  
+  if (ucDataBits == 8) {
+      huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  } else {
+      huart2.Init.WordLength = UART_WORDLENGTH_9B;
+  }
+  
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  
+  if( eParity == MB_PAR_NONE ) {
+      huart2.Init.Parity = UART_PARITY_NONE;
+  } else if( eParity == MB_PAR_ODD ) {
+      huart2.Init.Parity = UART_PARITY_ODD;
+  } else if( eParity == MB_PAR_EVEN ) {
+      huart2.Init.Parity = UART_PARITY_EVEN;
+  }
+  
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+      return FALSE;
+  }
+  
   return TRUE;
 }
  

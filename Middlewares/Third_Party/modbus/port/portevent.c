@@ -26,58 +26,67 @@
 #include "mbport.h"
 
 /* ----------------------- Variables ----------------------------------------*/
-/* Small bounded queue (8 events) to absorb short ISR bursts with low RAM cost. */
-#define MB_EVENT_QUEUE_SIZE 8
-
-static UCHAR ucQueueHead;
-static UCHAR ucQueueTail;
-static eMBEventType xQueuedEvents[MB_EVENT_QUEUE_SIZE];
+/* 
+ * [OPTIMIZATION] RTOS 없는 메인 루프 폴링 방식에서는 복잡한 링버퍼 대신 
+ * 단일 이벤트 플래그를 사용하여 인터럽트 차단(Disable) 시간을 극적으로 줄입니다.
+ * Modbus RTU는 특성상 한 번에 하나의 트랜잭션만 발생하므로 단일 플래그로 충분합니다.
+ */
+static volatile eMBEventType eQueuedEvent;
+static volatile BOOL xEventInQueue;
 
 /* ----------------------- Start implementation -----------------------------*/
 BOOL
 xMBPortEventInit( void )
 {
-    ENTER_CRITICAL_SECTION(  );
-    ucQueueHead = 0;
-    ucQueueTail = 0;
-    EXIT_CRITICAL_SECTION(  );
+    xEventInQueue = FALSE;
     return TRUE;
 }
 
 BOOL
 xMBPortEventPost( eMBEventType eEvent )
 {
-    BOOL xStatus = FALSE;
-    UCHAR ucNextHead;
-
     ENTER_CRITICAL_SECTION(  );
-    ucNextHead = ( UCHAR )( ( ucQueueHead + 1 ) % MB_EVENT_QUEUE_SIZE );
-
-    if( ucNextHead != ucQueueTail )
-    {
-        xQueuedEvents[ucQueueHead] = eEvent;
-        ucQueueHead = ucNextHead;
-        xStatus = TRUE;
-    }
-    /* ucNextHead == ucQueueTail means queue is full; reject incoming event. */
+    eQueuedEvent = eEvent;
+    xEventInQueue = TRUE;
     EXIT_CRITICAL_SECTION(  );
-
-    return xStatus;
+    return TRUE;
 }
 
 BOOL
 xMBPortEventGet( eMBEventType * eEvent )
 {
-    BOOL            xEventHappened = FALSE;
+    BOOL xEventHappened = FALSE;
 
     ENTER_CRITICAL_SECTION(  );
-    if( ucQueueHead != ucQueueTail )
+    if( xEventInQueue )
     {
-        *eEvent = xQueuedEvents[ucQueueTail];
-        ucQueueTail = ( UCHAR )( ( ucQueueTail + 1 ) % MB_EVENT_QUEUE_SIZE );
+        *eEvent = eQueuedEvent;
+        xEventInQueue = FALSE;
         xEventHappened = TRUE;
     }
     EXIT_CRITICAL_SECTION(  );
 
     return xEventHappened;
+}
+
+/* ----------------------- Critical Section Wrapper -------------------------*/
+/* [BUG FIX] 중첩된 크리티컬 섹션(Nesting) 시 안전한 복원을 위한 래퍼 함수 */
+static uint32_t ulCriticalNesting = 0;
+
+void vMBPortEnterCritical(void)
+{
+    __disable_irq();
+    ulCriticalNesting++;
+}
+
+void vMBPortExitCritical(void)
+{
+    if( ulCriticalNesting > 0 )
+    {
+        ulCriticalNesting--;
+        if( ulCriticalNesting == 0 )
+        {
+            __enable_irq();
+        }
+    }
 }

@@ -43,9 +43,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
-#include "cmsis_os.h"
+// cmsis_os.h 제거 (Bare-metal 구동)
 
 /* USER CODE BEGIN Includes */
+#include "mb.h"
+#include "mbport.h"
+/* USER CODE END Includes */
 
 /* USER CODE END Includes */
 
@@ -54,7 +57,7 @@ TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart2;
 
-osThreadId defaultTaskHandle;
+// osThreadId defaultTaskHandle; 제거 완료
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -66,13 +69,11 @@ void SystemClock_Config(void);
 void Error_Handler(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_TIM7_Init(void);
-void StartDefaultTask(void const * argument);
+// static void MX_TIM7_Init(void); 제거 (포팅 레이어에서 수행)
 
 /* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
-extern void ModbusRTUTask(void const * argument);
-
+// 외부 함수 선언
+extern void App_ModbusInitData(void); // mdtask.c 에서 정의할 초기화 함수
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -97,51 +98,30 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_TIM7_Init();
+  // MX_TIM7_Init(); 중복 초기화 방지를 위해 주석 처리 혹은 제거
 
   /* USER CODE BEGIN 2 */
-
-  /* USER CODE END 2 */
-
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
-
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
-
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
-
-  /* Create the thread(s) */
-  /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
-
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
- 
-
-  /* Start scheduler */
-  osKernelStart();
   
-  /* We should never get here as control is now taken by the scheduler */
+  // 1. 응답에 쓰일 Input Register 데이터 초기화
+  App_ModbusInitData();
+  
+  // 2. FreeModbus 초기화: RTU 모드, 슬레이브 주소 1, 포트 3, 보레이트 19200, 패리티 None
+  eMBInit(MB_RTU, 1, 3, 19200, MB_PAR_NONE);
+  
+  // 3. FreeModbus 통신 스택 활성화 (타이머 및 UART 인터럽트 켜기)
+  eMBEnable();
+  
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-  /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-  /* USER CODE BEGIN 3 */
-
+    /* USER CODE BEGIN 3 */
+    // FreeRTOS 없이 메인 루프에서 직접 Modbus 이벤트를 폴링(Polling) 합니다.
+    eMBPoll();
   }
   /* USER CODE END 3 */
 
@@ -202,29 +182,7 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0);
 }
 
-/* TIM7 init function */
-static void MX_TIM7_Init(void)
-{
-
-  TIM_MasterConfigTypeDef sMasterConfig;
-
-  htim7.Instance = TIM7;
-  htim7.Init.Prescaler = 0;
-  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim7.Init.Period = 0;
-  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-}
+/* TIM7 init function 은 porttimer.c 에서 다루므로 주석 처리 또는 제거합니다. */
 
 /* USART2 init function */
 static void MX_USART2_UART_Init(void)
@@ -404,22 +362,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
-/* StartDefaultTask function */
-void StartDefaultTask(void const * argument)
-{
-
-  /* USER CODE BEGIN 5 */
-	osThreadDef(ModbusRTUTask, ModbusRTUTask, osPriorityNormal, 0, configMINIMAL_STACK_SIZE);
-  osThreadCreate(osThread(ModbusRTUTask), NULL); 
-	
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END 5 */ 
-}
 
 /**
   * @brief  Period elapsed callback in non blocking mode
