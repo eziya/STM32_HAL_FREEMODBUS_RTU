@@ -26,6 +26,9 @@
 #include "stm32f4xx_hal.h"
 
 #define	INLINE                      inline
+#define PR_BEGIN_EXTERN_C           extern "C" {
+#define	PR_END_EXTERN_C             }
+
 /* [BUG FIX] 안전한 크리티컬 섹션 중첩을 위한 함수 래핑 */
 extern void vMBPortEnterCritical(void);
 extern void vMBPortExitCritical(void);

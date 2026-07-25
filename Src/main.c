@@ -105,11 +105,16 @@ int main(void)
   // 1. 응답에 쓰일 Input Register 데이터 초기화
   App_ModbusInitData();
   
-  // 2. FreeModbus 초기화: RTU 모드, 슬레이브 주소 1, 포트 3, 보레이트 19200, 패리티 None
-  eMBInit(MB_RTU, 1, 3, 19200, MB_PAR_NONE);
+  // 2. FreeModbus 초기화 및 활성화 (리턴값 체크하여 에러 시 무한루프)
+  if(eMBInit(MB_RTU, 1, 3, 19200, MB_PAR_NONE) != MB_ENOERR)
+  {
+      Error_Handler();
+  }
   
-  // 3. FreeModbus 통신 스택 활성화 (타이머 및 UART 인터럽트 켜기)
-  eMBEnable();
+  if(eMBEnable() != MB_ENOERR)
+  {
+      Error_Handler();
+  }
   
   /* USER CODE END 2 */
 

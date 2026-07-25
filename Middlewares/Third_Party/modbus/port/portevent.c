@@ -27,29 +27,43 @@
 
 /* ----------------------- Variables ----------------------------------------*/
 /* 
- * [OPTIMIZATION] RTOS 없는 메인 루프 폴링 방식에서는 복잡한 링버퍼 대신 
- * 단일 이벤트 플래그를 사용하여 인터럽트 차단(Disable) 시간을 극적으로 줄입니다.
- * Modbus RTU는 특성상 한 번에 하나의 트랜잭션만 발생하므로 단일 플래그로 충분합니다.
+ * [OPTIMIZATION] RTOS 없는 Bare-metal 환경에서, 단일 플래그의 이벤트 유실 위험을 
+ * 방지하기 위해 가장 가벼운 4-depth 고정 큐(Ring Buffer)를 사용합니다.
+ * 크기가 작아 처리가 빠르고, 버스트(Burst) 노이즈에도 강건하게 대응합니다.
  */
-static volatile eMBEventType eQueuedEvent;
-static volatile BOOL xEventInQueue;
+#define MB_EVENT_QUEUE_SIZE 4
+
+static volatile UCHAR ucQueueHead;
+static volatile UCHAR ucQueueTail;
+static volatile eMBEventType xQueuedEvents[MB_EVENT_QUEUE_SIZE];
 
 /* ----------------------- Start implementation -----------------------------*/
 BOOL
 xMBPortEventInit( void )
 {
-    xEventInQueue = FALSE;
+    ucQueueHead = 0;
+    ucQueueTail = 0;
     return TRUE;
 }
 
 BOOL
 xMBPortEventPost( eMBEventType eEvent )
 {
+    BOOL xStatus = FALSE;
+    UCHAR ucNextHead;
+
     ENTER_CRITICAL_SECTION(  );
-    eQueuedEvent = eEvent;
-    xEventInQueue = TRUE;
+    ucNextHead = ( UCHAR )( ( ucQueueHead + 1 ) & ( MB_EVENT_QUEUE_SIZE - 1 ) ); // % 연산 대신 비트마스킹(&) 최적화 (사이즈가 2의 승수일 때 가능)
+
+    if( ucNextHead != ucQueueTail )
+    {
+        xQueuedEvents[ucQueueHead] = eEvent;
+        ucQueueHead = ucNextHead;
+        xStatus = TRUE;
+    }
     EXIT_CRITICAL_SECTION(  );
-    return TRUE;
+
+    return xStatus;
 }
 
 BOOL
@@ -58,10 +72,10 @@ xMBPortEventGet( eMBEventType * eEvent )
     BOOL xEventHappened = FALSE;
 
     ENTER_CRITICAL_SECTION(  );
-    if( xEventInQueue )
+    if( ucQueueHead != ucQueueTail )
     {
-        *eEvent = eQueuedEvent;
-        xEventInQueue = FALSE;
+        *eEvent = xQueuedEvents[ucQueueTail];
+        ucQueueTail = ( UCHAR )( ( ucQueueTail + 1 ) & ( MB_EVENT_QUEUE_SIZE - 1 ) );
         xEventHappened = TRUE;
     }
     EXIT_CRITICAL_SECTION(  );
