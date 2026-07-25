@@ -1,15 +1,18 @@
 # STM32_HAL_FREEMODBUS_RTU
 FreeMODBUS RTU port for STM32 HAL library
 
-## 🚀 2nd Update (Bare-metal & Robustness Optimization)
-- **FreeRTOS 완전 제거**: 순수 Bare-metal `while(1)` 폴링 방식으로 동작하도록 구조를 최적화했습니다. (불필요한 OS 오버헤드 0%)
-- **안정성 강화**: TIM7 타이머 2배수 클럭 및 카운터 리셋 버그 수정, UART 에러(ORE/FE) 발생 시 무한 락 방지.
-- **초경량 큐 도입**: 이벤트 링버퍼를 4-Depth 사이즈의 가장 가벼운 큐로 대체하여 인터럽트 랙을 방지했습니다.
+http://blog.naver.com/eziya76/220970378890
 
-## 📝 중요: Modbus 주소 매핑 규칙 (Off-by-one)
-- 본 예제의 Input Register 콜백(`eMBRegInputCB`)에서 검사하는 `usAddress` 기준점은 1000입니다.
-- FreeModbus 스택은 마스터가 요청한 PDU 주소값에 **+1**을 더해서 전달합니다. (1-based 주소 반환)
-- **따라서, 마스터 장치(예: Modbus Poll)에서 1000번지를 응답받으려면 통신 패킷(PDU) 상으로는 주소 999 (0x03E7) 번지를 요청해야 합니다.**
+## Recent Updates (Bare-metal Optimization & Bug Fixes)
+- **Bare-metal Architecture**: Completely removed FreeRTOS dependencies and threads. The application now runs on a highly efficient `while(1)` polling loop.
+- **Timing Accuracy**: Fixed a critical TIM7 prescaler calculation bug (APB1 clock x2) and added a counter reset upon start to ensure precise T3.5 timeout detection.
+- **Robust UART Error Handling**: Prevented infinite interrupt lockups caused by UART Overrun (ORE) or Framing Errors by directly clearing the SR/DR registers.
+- **Lightweight Event Queue**: Replaced the previous ring buffer with an ultra-lightweight 4-depth fixed queue to minimize interrupt disable time and prevent event loss.
+- **Hardware Integration**: Dynamically applied the `ulBaudRate` and `eParity` parameters to the UART HAL initialization.
+- **C++ Compatibility**: Restored missing `extern "C"` macros in the port headers.
+
+> **Note on Modbus Addressing (Off-by-one):**
+> The FreeModbus stack passes a 1-based address to callbacks. Since the example validates `usAddress` starting from 1000, the master device must request PDU address `999 (0x03E7)` to read this register.
 
 ## Reference
 -  https://habrahabr.ru/post/279747/
