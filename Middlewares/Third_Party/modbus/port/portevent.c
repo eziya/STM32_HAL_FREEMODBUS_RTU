@@ -20,27 +20,50 @@
  */
 
 /* ----------------------- Modbus includes ----------------------------------*/
+#include "port.h"
 #include "mb.h"
 #include "mbport.h"
 
 /* ----------------------- Variables ----------------------------------------*/
-static eMBEventType eQueuedEvent;
-static BOOL     xEventInQueue;
+#define MB_EVENT_QUEUE_SIZE 8
+
+static volatile UCHAR ucQueueHead;
+static volatile UCHAR ucQueueTail;
+static eMBEventType xQueuedEvents[MB_EVENT_QUEUE_SIZE];
 
 /* ----------------------- Start implementation -----------------------------*/
 BOOL
 xMBPortEventInit( void )
 {
-    xEventInQueue = FALSE;
+    ENTER_CRITICAL_SECTION(  );
+    ucQueueHead = 0;
+    ucQueueTail = 0;
+    EXIT_CRITICAL_SECTION(  );
     return TRUE;
 }
 
 BOOL
 xMBPortEventPost( eMBEventType eEvent )
 {
-    xEventInQueue = TRUE;
-    eQueuedEvent = eEvent;
-    return TRUE;
+    BOOL xStatus = FALSE;
+    UCHAR ucNextHead;
+
+    ENTER_CRITICAL_SECTION(  );
+    ucNextHead = ucQueueHead + 1;
+    if( ucNextHead >= MB_EVENT_QUEUE_SIZE )
+    {
+        ucNextHead = 0;
+    }
+
+    if( ucNextHead != ucQueueTail )
+    {
+        xQueuedEvents[ucQueueHead] = eEvent;
+        ucQueueHead = ucNextHead;
+        xStatus = TRUE;
+    }
+    EXIT_CRITICAL_SECTION(  );
+
+    return xStatus;
 }
 
 BOOL
@@ -48,11 +71,18 @@ xMBPortEventGet( eMBEventType * eEvent )
 {
     BOOL            xEventHappened = FALSE;
 
-    if( xEventInQueue )
+    ENTER_CRITICAL_SECTION(  );
+    if( ucQueueHead != ucQueueTail )
     {
-        *eEvent = eQueuedEvent;
-        xEventInQueue = FALSE;
+        *eEvent = xQueuedEvents[ucQueueTail];
+        ucQueueTail++;
+        if( ucQueueTail >= MB_EVENT_QUEUE_SIZE )
+        {
+            ucQueueTail = 0;
+        }
         xEventHappened = TRUE;
     }
+    EXIT_CRITICAL_SECTION(  );
+
     return xEventHappened;
 }
