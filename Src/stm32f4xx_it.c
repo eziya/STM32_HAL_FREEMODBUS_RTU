@@ -44,10 +44,6 @@
 #include "mb.h"
 #include "mbport.h"
 extern volatile uint16_t downcounter;
-volatile uint32_t g_uartOverrunErrorCount = 0;
-volatile uint32_t g_uartNoiseErrorCount = 0;
-volatile uint32_t g_uartFrameErrorCount = 0;
-volatile uint32_t g_uartParityErrorCount = 0;
 
 /* USER CODE END 0 */
 
@@ -95,9 +91,10 @@ void USART2_IRQHandler(void)
 	uint32_t sr = huart2.Instance->SR;
   uint32_t cr1 = huart2.Instance->CR1;
   uint32_t cr3 = huart2.Instance->CR3;
+  uint32_t hasErrInterrupt = ((sr & (USART_SR_ORE | USART_SR_NE | USART_SR_FE)) != 0U) && ((cr3 & USART_CR3_EIE) != 0U);
+  uint32_t hasParityInterrupt = ((sr & USART_SR_PE) != 0U) && ((cr1 & USART_CR1_PEIE) != 0U);
 
-  if((((sr & (USART_SR_ORE | USART_SR_NE | USART_SR_FE)) != 0U) && ((cr3 & USART_CR3_EIE) != 0U)) ||
-     (((sr & USART_SR_PE) != 0U) && ((cr1 & USART_CR1_PEIE) != 0U))) {
+  if((hasErrInterrupt != 0U) || (hasParityInterrupt != 0U)) {
     if((sr & USART_SR_ORE) != 0U) {
       g_uartOverrunErrorCount++;
     }

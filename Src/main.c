@@ -43,6 +43,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
+#include "modbus_stack.h"
 #if APP_USE_FREERTOS
 #include "cmsis_os.h"
 #endif
@@ -77,12 +78,6 @@ void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-extern uint8_t ModbusRTUStackInit(void);
-extern void ModbusRTUStackPoll(void);
-#if APP_USE_FREERTOS
-extern void ModbusRTUTask(void const * argument);
-#endif
-
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */

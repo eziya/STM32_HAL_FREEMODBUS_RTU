@@ -33,7 +33,6 @@
 static UCHAR ucQueueHead;
 static UCHAR ucQueueTail;
 static eMBEventType xQueuedEvents[MB_EVENT_QUEUE_SIZE];
-volatile uint32_t g_mbPortEventDropCount = 0;
 
 /* ----------------------- Start implementation -----------------------------*/
 BOOL

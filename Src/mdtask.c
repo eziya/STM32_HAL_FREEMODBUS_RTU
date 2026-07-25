@@ -1,6 +1,7 @@
 #include "stm32f4xx_hal.h"
 #include "main.h"
 #include "modbus_diag.h"
+#include "modbus_stack.h"
 #if APP_USE_FREERTOS
 #include "cmsis_os.h"
 #endif
@@ -14,10 +15,15 @@
 static USHORT usRegInputStart = REG_INPUT_START;
 static USHORT usRegInputBuf[REG_INPUT_NREGS];
 
+volatile uint32_t g_uartOverrunErrorCount = 0;
+volatile uint32_t g_uartNoiseErrorCount = 0;
+volatile uint32_t g_uartFrameErrorCount = 0;
+volatile uint32_t g_uartParityErrorCount = 0;
 volatile uint32_t g_mbInitErrorCount = 0;
 volatile uint32_t g_mbEnableErrorCount = 0;
 volatile uint32_t g_mbPollErrorCount = 0;
 volatile uint32_t g_mbRegNoregErrorCount = 0;
+volatile uint32_t g_mbPortEventDropCount = 0;
 
 uint8_t ModbusRTUStackInit(void)
 {
