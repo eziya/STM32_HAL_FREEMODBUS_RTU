@@ -95,14 +95,13 @@ eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
             iRegIndex++;
             usNRegs--;
         }
-				
-				HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
+        HAL_GPIO_TogglePin(LD4_GPIO_Port, LD4_Pin);
     }
     else
     {
-			  HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
+        HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
         g_mbRegNoregErrorCount++;
-        eStatus = MB_ENOREG;			
+        eStatus = MB_ENOREG;
     }
 
     return eStatus;
