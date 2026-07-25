@@ -151,12 +151,14 @@ void TIM6_DAC_IRQHandler(void)
 void TIM7_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM7_IRQn 0 */
-	if(__HAL_TIM_GET_FLAG(&htim7, TIM_FLAG_UPDATE) != RESET && __HAL_TIM_GET_IT_SOURCE(&htim7, TIM_IT_UPDATE) !=RESET) {
+	if(__HAL_TIM_GET_FLAG(&htim7, TIM_FLAG_UPDATE) != RESET) {
     __HAL_TIM_CLEAR_IT(&htim7, TIM_IT_UPDATE);
-    if (downcounter > 0U) {
-      downcounter--;
-      if (downcounter == 0U) {
-        pxMBPortCBTimerExpired();
+    if (__HAL_TIM_GET_IT_SOURCE(&htim7, TIM_IT_UPDATE) !=RESET) {
+      if (downcounter > 0U) {
+        downcounter--;
+        if (downcounter == 0U) {
+          pxMBPortCBTimerExpired();
+        }
       }
     }
   }

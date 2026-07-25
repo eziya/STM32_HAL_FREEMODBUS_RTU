@@ -112,6 +112,10 @@ eMBErrorCode
 eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs,
                  eMBRegisterMode eMode )
 {
+    (void)pucRegBuffer;
+    (void)usAddress;
+    (void)usNRegs;
+    (void)eMode;
     ulMBRegNoregErrorCount++;
     return MB_ENOREG;
 }
@@ -121,6 +125,10 @@ eMBErrorCode
 eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils,
                eMBRegisterMode eMode )
 {
+    (void)pucRegBuffer;
+    (void)usAddress;
+    (void)usNCoils;
+    (void)eMode;
     ulMBRegNoregErrorCount++;
     return MB_ENOREG;
 }
@@ -128,6 +136,9 @@ eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils,
 eMBErrorCode
 eMBRegDiscreteCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNDiscrete )
 {
+    (void)pucRegBuffer;
+    (void)usAddress;
+    (void)usNDiscrete;
     ulMBRegNoregErrorCount++;
     return MB_ENOREG;
 }

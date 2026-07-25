@@ -19,15 +19,15 @@ http://blog.naver.com/eziya76/220970378890
 - Other function codes are disabled in `Middlewares/Third_Party/modbus/include/mbconfig.h`
 
 ## RTOS / Bare-metal build mode
-- Build-time switch: `APP_USE_FREERTOS` in `/home/runner/work/STM32_HAL_FREEMODBUS_RTU/STM32_HAL_FREEMODBUS_RTU/Inc/main.h`
+- Build-time switch: `APP_USE_FREERTOS` in `Inc/main.h`
   - `0`: bare-metal loop (`ModbusRTUStackInit` + `ModbusRTUStackPoll`)
   - `1`: FreeRTOS task mode (`ModbusRTUTask`)
 
 ## Diagnostics counters
 The demo exposes simple counters for troubleshooting:
-- UART error counters (ORE/NE/FE/PE): `/home/runner/work/STM32_HAL_FREEMODBUS_RTU/STM32_HAL_FREEMODBUS_RTU/Src/stm32f4xx_it.c`
-- Event queue drop counter: `/home/runner/work/STM32_HAL_FREEMODBUS_RTU/STM32_HAL_FREEMODBUS_RTU/Middlewares/Third_Party/modbus/port/portevent.c`
-- Modbus init/poll/unsupported-register counters: `/home/runner/work/STM32_HAL_FREEMODBUS_RTU/STM32_HAL_FREEMODBUS_RTU/Src/mdtask.c`
+- UART error counters (ORE/NE/FE/PE): `Src/stm32f4xx_it.c`
+- Event queue drop counter: `Middlewares/Third_Party/modbus/port/portevent.c`
+- Modbus init/poll/unsupported-register counters: `Src/mdtask.c`
 
 ## Quick test (Modbus Poll)
 1. Connection: Serial, COMx, 19200, 8 data bits, no parity, 1 stop bit.
