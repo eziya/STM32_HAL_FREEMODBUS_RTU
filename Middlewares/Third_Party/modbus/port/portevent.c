@@ -26,7 +26,7 @@
 #include "mbport.h"
 
 /* ----------------------- Variables ----------------------------------------*/
-/* Small bounded queue to avoid single-event overwrite under ISR bursts. */
+/* Small bounded queue (8 events) to absorb short ISR bursts with low RAM cost. */
 #define MB_EVENT_QUEUE_SIZE 8
 
 static volatile UCHAR ucQueueHead;
@@ -59,6 +59,7 @@ xMBPortEventPost( eMBEventType eEvent )
         ucQueueHead = ucNextHead;
         xStatus = TRUE;
     }
+    /* ucNextHead == ucQueueTail means queue is full; drop newest event. */
     EXIT_CRITICAL_SECTION(  );
 
     return xStatus;
