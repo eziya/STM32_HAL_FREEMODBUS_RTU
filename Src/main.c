@@ -43,7 +43,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
+#if APP_USE_FREERTOS
 #include "cmsis_os.h"
+#endif
 
 /* USER CODE BEGIN Includes */
 
@@ -54,7 +56,9 @@ TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart2;
 
+#if APP_USE_FREERTOS
 osThreadId defaultTaskHandle;
+#endif
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -67,11 +71,17 @@ void Error_Handler(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM7_Init(void);
+#if APP_USE_FREERTOS
 void StartDefaultTask(void const * argument);
+#endif
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+extern uint8_t ModbusRTUStackInit(void);
+extern void ModbusRTUStackPoll(void);
+#if APP_USE_FREERTOS
 extern void ModbusRTUTask(void const * argument);
+#endif
 
 /* USER CODE END PFP */
 
@@ -103,6 +113,7 @@ int main(void)
 
   /* USER CODE END 2 */
 
+#if APP_USE_FREERTOS
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
   /* USER CODE END RTOS_MUTEX */
@@ -128,11 +139,14 @@ int main(void)
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
  
-
   /* Start scheduler */
   osKernelStart();
-  
-  /* We should never get here as control is now taken by the scheduler */
+#else
+  if(!ModbusRTUStackInit())
+  {
+    Error_Handler();
+  }
+#endif
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -141,7 +155,9 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-
+#if !APP_USE_FREERTOS
+    ModbusRTUStackPoll();
+#endif
   }
   /* USER CODE END 3 */
 
@@ -405,6 +421,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE END 4 */
 
+#if APP_USE_FREERTOS
 /* StartDefaultTask function */
 void StartDefaultTask(void const * argument)
 {
@@ -420,6 +437,7 @@ void StartDefaultTask(void const * argument)
   }
   /* USER CODE END 5 */ 
 }
+#endif
 
 /**
   * @brief  Period elapsed callback in non blocking mode

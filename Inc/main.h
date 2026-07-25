@@ -119,6 +119,9 @@
 #define MEMS_INT2_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
+#ifndef APP_USE_FREERTOS
+#define APP_USE_FREERTOS 0
+#endif
 
 /* USER CODE END Private defines */
 

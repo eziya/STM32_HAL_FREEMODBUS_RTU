@@ -1,5 +1,8 @@
 #include "stm32f4xx_hal.h"
+#include "main.h"
+#if APP_USE_FREERTOS
 #include "cmsis_os.h"
+#endif
 
 #include "mb.h"
 #include "mbport.h"
@@ -10,9 +13,15 @@
 static USHORT usRegInputStart = REG_INPUT_START;
 static USHORT usRegInputBuf[REG_INPUT_NREGS];
 
-void ModbusRTUTask(void const * argument)
-{ 
-  /* ABCDEF */
+volatile uint32_t ulMBInitErrorCount = 0;
+volatile uint32_t ulMBEnableErrorCount = 0;
+volatile uint32_t ulMBPollErrorCount = 0;
+volatile uint32_t ulMBRegNoregErrorCount = 0;
+
+uint8_t ModbusRTUStackInit(void)
+{
+  eMBErrorCode eStatus;
+
   usRegInputBuf[0] = 11;
   usRegInputBuf[1] = 22;
   usRegInputBuf[2] = 33;
@@ -20,15 +29,52 @@ void ModbusRTUTask(void const * argument)
   usRegInputBuf[4] = 55;
   usRegInputBuf[5] = 66;
   usRegInputBuf[6] = 77;
-  usRegInputBuf[7] = 88;  
-  
-  eMBErrorCode eStatus = eMBInit( MB_RTU, 1, 3, 19200, MB_PAR_NONE );
+  usRegInputBuf[7] = 88;
+
+  eStatus = eMBInit( MB_RTU, 1, 3, 19200, MB_PAR_NONE );
+  if( eStatus != MB_ENOERR )
+  {
+    ulMBInitErrorCount++;
+    return 0;
+  }
+
   eStatus = eMBEnable();
-  
-  while(1) {
-    eMBPoll();           
+  if( eStatus != MB_ENOERR )
+  {
+    ulMBEnableErrorCount++;
+    return 0;
+  }
+
+  return 1;
+}
+
+void ModbusRTUStackPoll(void)
+{
+  eMBErrorCode eStatus = eMBPoll();
+  if( eStatus != MB_ENOERR )
+  {
+    ulMBPollErrorCount++;
   }
 }
+
+#if APP_USE_FREERTOS
+void ModbusRTUTask(void const * argument)
+{ 
+  (void)argument;
+  if(!ModbusRTUStackInit())
+  {
+    HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_SET);
+    for(;;)
+    {
+      osDelay(1000);
+    }
+  }
+  
+  while(1) {
+    ModbusRTUStackPoll();
+  }
+}
+#endif
 
 eMBErrorCode
 eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
@@ -55,6 +101,7 @@ eMBRegInputCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs )
     else
     {
 			  HAL_GPIO_TogglePin(LD5_GPIO_Port, LD5_Pin);
+        ulMBRegNoregErrorCount++;
         eStatus = MB_ENOREG;			
     }
 
@@ -65,6 +112,7 @@ eMBErrorCode
 eMBRegHoldingCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNRegs,
                  eMBRegisterMode eMode )
 {
+    ulMBRegNoregErrorCount++;
     return MB_ENOREG;
 }
 
@@ -73,11 +121,13 @@ eMBErrorCode
 eMBRegCoilsCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNCoils,
                eMBRegisterMode eMode )
 {
+    ulMBRegNoregErrorCount++;
     return MB_ENOREG;
 }
 
 eMBErrorCode
 eMBRegDiscreteCB( UCHAR * pucRegBuffer, USHORT usAddress, USHORT usNDiscrete )
 {
+    ulMBRegNoregErrorCount++;
     return MB_ENOREG;
 }

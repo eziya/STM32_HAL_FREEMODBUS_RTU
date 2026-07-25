@@ -42,8 +42,11 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#if APP_USE_FREERTOS
 #include "FreeRTOS.h"
 #include "task.h"
+#endif
 
 /* USER CODE BEGIN Includes */     
 

@@ -75,6 +75,7 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   RCC_ClkInitTypeDef    clkconfig;
   uint32_t              uwTimclock = 0;
   uint32_t              uwPrescalerValue = 0;
+  uint32_t              uwAPB1Prescaler = 0;
   uint32_t              pFLatency;
   
   /*Configure the TIM6 IRQ priority */
@@ -90,7 +91,15 @@ HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
   HAL_RCC_GetClockConfig(&clkconfig, &pFLatency);
   
   /* Compute TIM6 clock */
-  uwTimclock = 2*HAL_RCC_GetPCLK1Freq();
+  uwAPB1Prescaler = clkconfig.APB1CLKDivider;
+  if(uwAPB1Prescaler == RCC_HCLK_DIV1)
+  {
+    uwTimclock = HAL_RCC_GetPCLK1Freq();
+  }
+  else
+  {
+    uwTimclock = 2U * HAL_RCC_GetPCLK1Freq();
+  }
    
   /* Compute the prescaler value to have TIM6 counter clock equal to 1MHz */
   uwPrescalerValue = (uint32_t) ((uwTimclock / 1000000) - 1);

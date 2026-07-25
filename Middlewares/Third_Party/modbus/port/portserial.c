@@ -38,12 +38,20 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
 {
   /* If xRXEnable enable serial receive interrupts. If xTxENable enable
   * transmitter empty interrupts.
+  * Policy:
+  * - RX path enables RXNE + ERR interrupts to detect and recover from ORE/FE/NE/PE.
+  * - TX path enables TXE interrupt only while actively transmitting.
   */
   
   if (xRxEnable) {        
+    __HAL_UART_CLEAR_OREFLAG(&huart2);
+    __HAL_UART_ENABLE_IT(&huart2, UART_IT_ERR);
+    __HAL_UART_ENABLE_IT(&huart2, UART_IT_PE);
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
   } else {    
     __HAL_UART_DISABLE_IT(&huart2, UART_IT_RXNE);
+    __HAL_UART_DISABLE_IT(&huart2, UART_IT_PE);
+    __HAL_UART_DISABLE_IT(&huart2, UART_IT_ERR);
   }
   
   if (xTxEnable) {    
@@ -57,9 +65,15 @@ BOOL
 xMBPortSerialInit( UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity eParity )
 {
   /* 
-  Do nothing, Initialization is handled by MX_USART3_UART_Init() 
-  Fixed port, baudrate, databit and parity  
+  Do nothing, initialization is handled by MX_USART2_UART_Init().
+  This STM32F4 demo intentionally uses fixed hardware settings:
+  USART2, 19200 baud, 8 data bits, no parity.
+  Parameters are accepted for FreeModbus API compatibility only.
   */
+  (void)ucPORT;
+  (void)ulBaudRate;
+  (void)ucDataBits;
+  (void)eParity;
   return TRUE;
 }
  

@@ -34,12 +34,19 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
+#include "main.h"
+#if APP_USE_FREERTOS
 #include "cmsis_os.h"
+#endif
 
 /* USER CODE BEGIN 0 */
 #include "mb.h"
 #include "mbport.h"
 extern volatile uint16_t downcounter;
+volatile uint32_t ulUartOverrunErrorCount = 0;
+volatile uint32_t ulUartNoiseErrorCount = 0;
+volatile uint32_t ulUartFrameErrorCount = 0;
+volatile uint32_t ulUartParityErrorCount = 0;
 
 /* USER CODE END 0 */
 
@@ -61,7 +68,11 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
   /* USER CODE END SysTick_IRQn 0 */
+#if APP_USE_FREERTOS
   osSystickHandler();
+#else
+  HAL_SYSTICK_IRQHandler();
+#endif
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
   /* USER CODE END SysTick_IRQn 1 */
@@ -80,24 +91,36 @@ void SysTick_Handler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-	uint32_t tmp_flag = __HAL_UART_GET_FLAG(&huart2, UART_FLAG_RXNE);
-  uint32_t tmp_it_source = __HAL_UART_GET_IT_SOURCE(&huart2, UART_IT_RXNE);
+	uint32_t sr = huart2.Instance->SR;
+  uint32_t cr1 = huart2.Instance->CR1;
+  uint32_t cr3 = huart2.Instance->CR3;
+
+  if((((sr & (USART_SR_ORE | USART_SR_NE | USART_SR_FE)) != 0U) && ((cr3 & USART_CR3_EIE) != 0U)) ||
+     (((sr & USART_SR_PE) != 0U) && ((cr1 & USART_CR1_PEIE) != 0U))) {
+    if((sr & USART_SR_ORE) != 0U) {
+      ulUartOverrunErrorCount++;
+    }
+    if((sr & USART_SR_NE) != 0U) {
+      ulUartNoiseErrorCount++;
+    }
+    if((sr & USART_SR_FE) != 0U) {
+      ulUartFrameErrorCount++;
+    }
+    if((sr & USART_SR_PE) != 0U) {
+      ulUartParityErrorCount++;
+    }
+    __HAL_UART_CLEAR_PEFLAG(&huart2);
+    HAL_GPIO_TogglePin(LD6_GPIO_Port, LD6_Pin);
+    return;
+  }
   
-  if((tmp_flag != RESET) && (tmp_it_source != RESET)) {
+  if(((sr & USART_SR_RXNE) != 0U) && ((cr1 & USART_CR1_RXNEIE) != 0U)) {
     pxMBFrameCBByteReceived();
     return;
   }
   
-  if((__HAL_UART_GET_FLAG(&huart2, UART_FLAG_TXE) != RESET) &&(__HAL_UART_GET_IT_SOURCE(&huart2, UART_IT_TXE) != RESET)) {
-    pxMBFrameCBTransmitterEmpty();    
-    return ;
-  }
-
-  if((__HAL_UART_GET_FLAG(&huart2, UART_FLAG_ORE) != RESET) ||
-     (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_NE) != RESET)  ||
-     (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_FE) != RESET)  ||
-     (__HAL_UART_GET_FLAG(&huart2, UART_FLAG_PE) != RESET)) {
-    HAL_UART_IRQHandler(&huart2);
+  if(((sr & USART_SR_TXE) != 0U) && ((cr1 & USART_CR1_TXEIE) != 0U)) {
+    pxMBFrameCBTransmitterEmpty();
     return;
   }
 
@@ -139,7 +162,6 @@ void TIM7_IRQHandler(void)
   }
 
   /* USER CODE END TIM7_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim7);
   /* USER CODE BEGIN TIM7_IRQn 1 */
 
   /* USER CODE END TIM7_IRQn 1 */
