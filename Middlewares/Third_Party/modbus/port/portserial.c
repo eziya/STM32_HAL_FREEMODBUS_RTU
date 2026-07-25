@@ -66,10 +66,13 @@ xMBPortSerialInit( UCHAR ucPORT, ULONG ulBaudRate, UCHAR ucDataBits, eMBParity e
 BOOL
 xMBPortSerialPutByte( CHAR ucByte )
 {
-  /* Put a byte in the UARTs transmit buffer. This function is called
-  * by the protocol stack if pxMBFrameCBTransmitterEmpty( ) has been
-  * called. */
-  return (HAL_OK == HAL_UART_Transmit(&huart2, (uint8_t*)&ucByte, 1, 10));
+  /* Put a byte in the UART transmit register without blocking.
+  * This function is called from the TXE interrupt path, so HAL_UART_Transmit
+  * must not be used here because it can block.
+  * This path intentionally bypasses HAL TX state tracking and relies on the
+  * dedicated Modbus IRQ-driven TX flow only. */
+  huart2.Instance->DR = (uint8_t)ucByte;
+  return TRUE;
 }
  
 BOOL

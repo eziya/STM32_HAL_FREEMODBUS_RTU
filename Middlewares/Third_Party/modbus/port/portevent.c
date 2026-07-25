@@ -20,27 +20,49 @@
  */
 
 /* ----------------------- Modbus includes ----------------------------------*/
+/* port.h provides IRQ critical-section macros used by this queue. */
+#include "port.h"
 #include "mb.h"
 #include "mbport.h"
 
 /* ----------------------- Variables ----------------------------------------*/
-static eMBEventType eQueuedEvent;
-static BOOL     xEventInQueue;
+/* Small bounded queue (8 events) to absorb short ISR bursts with low RAM cost. */
+#define MB_EVENT_QUEUE_SIZE 8
+
+static UCHAR ucQueueHead;
+static UCHAR ucQueueTail;
+static eMBEventType xQueuedEvents[MB_EVENT_QUEUE_SIZE];
 
 /* ----------------------- Start implementation -----------------------------*/
 BOOL
 xMBPortEventInit( void )
 {
-    xEventInQueue = FALSE;
+    ENTER_CRITICAL_SECTION(  );
+    ucQueueHead = 0;
+    ucQueueTail = 0;
+    EXIT_CRITICAL_SECTION(  );
     return TRUE;
 }
 
 BOOL
 xMBPortEventPost( eMBEventType eEvent )
 {
-    xEventInQueue = TRUE;
-    eQueuedEvent = eEvent;
-    return TRUE;
+    BOOL xStatus = FALSE;
+    UCHAR ucNextHead;
+
+    ENTER_CRITICAL_SECTION(  );
+    ucNextHead = ( UCHAR )( ( ucQueueHead + 1 ) % MB_EVENT_QUEUE_SIZE );
+
+    if( ucNextHead != ucQueueTail )
+    {
+        xQueuedEvents[ucQueueHead] = eEvent;
+        ucQueueHead = ucNextHead;
+        xStatus = TRUE;
+    }
+    /* ucNextHead == ucQueueTail means queue is full; reject incoming event. */
+    EXIT_CRITICAL_SECTION(  );
+
+    return xStatus;
 }
 
 BOOL
@@ -48,11 +70,14 @@ xMBPortEventGet( eMBEventType * eEvent )
 {
     BOOL            xEventHappened = FALSE;
 
-    if( xEventInQueue )
+    ENTER_CRITICAL_SECTION(  );
+    if( ucQueueHead != ucQueueTail )
     {
-        *eEvent = eQueuedEvent;
-        xEventInQueue = FALSE;
+        *eEvent = xQueuedEvents[ucQueueTail];
+        ucQueueTail = ( UCHAR )( ( ucQueueTail + 1 ) % MB_EVENT_QUEUE_SIZE );
         xEventHappened = TRUE;
     }
+    EXIT_CRITICAL_SECTION(  );
+
     return xEventHappened;
 }
