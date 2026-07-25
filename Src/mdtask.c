@@ -1,5 +1,6 @@
 #include "stm32f4xx_hal.h"
 #include "main.h"
+#include "modbus_diag.h"
 #if APP_USE_FREERTOS
 #include "cmsis_os.h"
 #endif

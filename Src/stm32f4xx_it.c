@@ -35,6 +35,7 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
 #include "main.h"
+#include "modbus_diag.h"
 #if APP_USE_FREERTOS
 #include "cmsis_os.h"
 #endif
@@ -109,6 +110,7 @@ void USART2_IRQHandler(void)
     if((sr & USART_SR_PE) != 0U) {
       g_uartParityErrorCount++;
     }
+    /* On STM32F4 this macro clears PE/FE/NE/ORE by SR+DR read sequence. */
     __HAL_UART_CLEAR_PEFLAG(&huart2);
     return;
   }

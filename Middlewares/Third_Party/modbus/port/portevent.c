@@ -22,6 +22,7 @@
 /* ----------------------- Modbus includes ----------------------------------*/
 /* port.h provides IRQ critical-section macros used by this queue. */
 #include "port.h"
+#include "modbus_diag.h"
 #include "mb.h"
 #include "mbport.h"
 
@@ -32,7 +33,7 @@
 static UCHAR ucQueueHead;
 static UCHAR ucQueueTail;
 static eMBEventType xQueuedEvents[MB_EVENT_QUEUE_SIZE];
-volatile ULONG g_mbPortEventDropCount = 0;
+volatile uint32_t g_mbPortEventDropCount = 0;
 
 /* ----------------------- Start implementation -----------------------------*/
 BOOL
