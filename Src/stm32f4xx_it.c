@@ -107,7 +107,7 @@ void USART2_IRQHandler(void)
     if((sr & USART_SR_PE) != 0U) {
       g_uartParityErrorCount++;
     }
-    /* On STM32F4 this PE-clear macro also clears FE/NE/ORE via SR+DR read sequence. */
+    /* On STM32F4 HAL implementation, this PE-clear macro also clears FE/NE/ORE via SR+DR read sequence. */
     __HAL_UART_CLEAR_PEFLAG(&huart2);
     return;
   }

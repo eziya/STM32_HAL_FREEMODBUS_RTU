@@ -12,6 +12,8 @@
 #define REG_INPUT_START 1000
 #define REG_INPUT_NREGS 8
 
+extern void Error_Handler(void);
+
 static USHORT usRegInputStart = REG_INPUT_START;
 static USHORT usRegInputBuf[REG_INPUT_NREGS];
 
@@ -67,14 +69,10 @@ void ModbusRTUStackPoll(void)
 #if APP_USE_FREERTOS
 void ModbusRTUTask(void const * argument)
 { 
-  UNUSED(argument);
+  (void)argument;
   if(!ModbusRTUStackInit())
   {
-    HAL_GPIO_WritePin(LD5_GPIO_Port, LD5_Pin, GPIO_PIN_SET);
-    for(;;)
-    {
-      osDelay(1000);
-    }
+    Error_Handler();
   }
   
   while(1) {

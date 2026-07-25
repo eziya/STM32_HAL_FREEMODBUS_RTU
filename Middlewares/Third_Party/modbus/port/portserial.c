@@ -44,7 +44,6 @@ vMBPortSerialEnable( BOOL xRxEnable, BOOL xTxEnable )
   */
   
   if (xRxEnable) {        
-    __HAL_UART_CLEAR_OREFLAG(&huart2);
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_ERR);
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_PE);
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
