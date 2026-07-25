@@ -34,7 +34,7 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
-#include "cmsis_os.h"
+// #include "cmsis_os.h" 삭제 (RTOS 완전 분리)
 
 /* USER CODE BEGIN 0 */
 #include "mb.h"
@@ -61,7 +61,7 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 0 */
 
   /* USER CODE END SysTick_IRQn 0 */
-  osSystickHandler();
+  // osSystickHandler(); 삭제 (RTOS 완전 분리)
   /* USER CODE BEGIN SysTick_IRQn 1 */
 
   /* USER CODE END SysTick_IRQn 1 */

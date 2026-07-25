@@ -73,6 +73,11 @@ vMBPortTimersEnable(  )
 {
   /* Enable the timer with the timeout passed to xMBPortTimersInit( ) */
   downcounter = timeout;
+  
+  /* [BUG FIX] 타이머를 켤 때 카운터 레지스터(CNT)를 0으로 강제 초기화하여 
+   * 이전 카운트 값이 남아 첫 인터럽트가 조기에 발생하는(T3.5 타임아웃 오류) 현상 방지 
+   */
+  __HAL_TIM_SET_COUNTER(&htim7, 0);
   HAL_TIM_Base_Start_IT(&htim7);
 }
  
